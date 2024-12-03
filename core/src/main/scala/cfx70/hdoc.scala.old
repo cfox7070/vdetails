@@ -1,0 +1,222 @@
+package cfx70.redrr
+
+import scala.scalajs.js
+
+import js.JSConverters._
+
+import scala.concurrent.{Future, Promise}
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.util.{Failure, Success}
+
+import scala.math._
+
+//import org.denigma.threejs.{Vector => ThreeVector, _}
+
+import scala.collection.mutable
+
+
+trait Command {
+    def execute() : Unit
+    def unexecute() : Unit
+}
+
+object CmdMan {
+	var cmds = List[Command]()
+	var ucmds = List[Command]()
+	
+	def canUndo = cmds.nonEmpty
+	def canRedo = ucmds.nonEmpty
+
+	def exec(c:Command){
+		c.execute()
+		cmds = c :: cmds
+		if(cmds.size > 6) cmds = cmds.dropRight(1)
+	}
+	
+	def undo() = if (canUndo){
+		val c = cmds.head; cmds=cmds.tail
+		c.unexecute()
+		ucmds=c :: ucmds
+		if(ucmds.size > 6) ucmds = ucmds.dropRight(1)
+	}
+	
+	def redo () = if (canRedo){
+		val c = ucmds.head; ucmds=ucmds.tail
+		c.execute()
+		cmds = c :: cmds
+		if(cmds.size > 6) cmds = cmds.dropRight(1)
+	}
+
+}
+
+///////////////////////////////////////////////////////
+
+class HSystem(val name : String) {
+
+}
+
+class HDoc(var fname : String, val app : SchemeApp) {
+	
+    var mparts = scala.collection.mutable.SortedMap[Int,SchemeEntity]() //val?
+    var msystems = List[HSystem]()
+
+    var curHSystem : HSystem = null
+    var curConn: Option[Connector] = None
+
+    def addPart(ent : SchemeEntity) : Unit = mparts += ent.eid -> ent
+	def delPart(pid : Int) : Unit = mparts -= pid
+
+  def load(): Future[Unit] = {  
+       def setPlacements() {
+       }
+       def updateConns(){
+          for( (k,v) <- mparts){
+           val cns=v.eparams.connected
+           for (cni <- cns){
+                val mcon = v.cn(cni.mcon)
+                val otherEnt = mparts(cni.otherId)
+                val oterCon = otherEnt.cn(cni.otherCon)
+                mcon connectTo oterCon
+           }
+          }
+       }
+     def loadParts(prl : List[PartRecord]){
+        for(pr <-prl){
+        val p =  pr.htype match {
+            case "StrPartR" =>  val spr = pr.params.asInstanceOf[SchemeEntityParams]
+                                new StrPartR (pr.id,spr)
+            case "SElbR" =>   val spr = pr.params.asInstanceOf[SchemeEntityParams]
+                                new SElbR (pr.id,spr)
+         }
+         addPart(p)
+        }
+        updateConns()
+    }
+    def setCurSystem(name : String) { curHSystem = msystems.takeWhile(_.name == name).head }
+
+    val p = Promise[Unit]()
+    IndexedDb.getHSystems() onComplete {
+    case Success(sl) => 
+        msystems = sl
+        IndexedDb.getParts() onComplete {
+            case Success(prl) => 
+            loadParts(prl)
+            IndexedDb.getCurSystemName() onComplete {
+                case Success(sn) => 
+                        setCurSystem(sn)
+                        IndexedDb.getCurConn() onComplete {
+                        case Success(cnr) => 
+                            curConn = Some(mparts(cnr.eid).cn(cnr.conN))
+                            p.success(())
+                        case Failure(e) => p.failure(e)
+                    }
+                case Failure(e) => p.failure(e)
+            }
+            case Failure(e) => p.failure(e)
+        }
+    case Failure(e) => p.failure(e)
+    }
+    p.future      
+  }
+    
+  def addConnectSPR(mparams : SchemeEntityParams) = {
+    val p = Promise[SchemeEntity]()
+    curConn foreach { con => val pcn=new HConnection(1,con.ent.eid,con.nmb)
+                            mparams.connected = js.Array(pcn)}
+    val pidf = IndexedDb.addPart($(htype = "StrPartR", params = mparams))
+    pidf onComplete {
+    case Success(pid) =>
+            val sp = new StrPartR (pid,mparams)
+            curConn foreach { c => sp.cn(1).connectTo(c)}
+            curConn=Some(sp.cn(0))
+            p.success(sp)
+    case Failure(e) => p.failure(e)
+    }                                                                             
+    p.future
+  }
+  
+  def addConnectTurnR(pars : SchemeEntityParams, dir : String) : (SchemeEntityParams)=>Future[SchemeEntity] = {
+	val cns = js.Array[HConnection]()
+	var crnmb = 0 ; var cnnmb = 1
+	if(dir == "left" || dir == "up") {
+		curConn foreach { con => cns(0) = new HConnection(1,con.ent.eid,con.nmb)}
+	} else if (dir == "right" || dir == "down"){
+		curConn foreach { con => cns(0) = new HConnection(0,con.ent.eid,con.nmb); crnmb = 1;cnnmb=0}
+	}
+	(pars : SchemeEntityParams) => {
+		val p = Promise[SchemeEntity]()		
+		pars.connected = cns
+        val trgs = js.Array[Int]()
+        if(dir == "up" || dir == "down"){
+            val a = pars.dims(0); pars.dims(0)=pars.dims(1); pars.dims(1)=a
+            trgs(0)= if (dir == "up") 0 else 1
+        }		
+		pars.triggs = trgs
+		val pidf = IndexedDb.addPart($(htype = "SElbR", params = pars))
+		pidf onComplete {
+		case Success(pid) =>
+				val sp = new SElbR (pid,pars)
+				println(s"cnnmb = $cnnmb crnmb = $crnmb")
+				curConn foreach { c => sp.cn(cnnmb).connectTo(c)}
+				curConn=Some(sp.cn(crnmb))
+				p.success(sp)
+		case Failure(e) => p.failure(e)
+		}                                                                             
+		p.future
+	}
+  }
+    
+  def addConnectR(pcmd : String, pars : SchemeEntityParams) : Option[Command] = {
+    curConn foreach {c => pars.dims(0) = c.a; pars.dims(1) = c.b}
+    pcmd match {
+        case "forv" =>Some(new AddConntectPartCommand(addConnectSPR,pars) )
+        case "left" =>Some( new AddConntectPartCommand(addConnectTurnR(pars,"left"),pars) )
+        case "right" =>Some( new AddConntectPartCommand(addConnectTurnR(pars,"right"),pars) )
+        case "up" => Some( new AddConntectPartCommand(addConnectTurnR(pars,"up"),pars) )
+        case "down" => Some( new AddConntectPartCommand(addConnectTurnR(pars,"down"),pars) )
+        case "red" => None
+        case _ =>None
+    }
+  }
+  
+  def addConnectC(pcmd : String, pars : SchemeEntityParams) : Option[Command] = {
+    null
+  } 
+  
+  def addConnectPartRCommand(pcmd : String, pars : SchemeEntityParams) : Option[Command] = {
+    pars.hsystem = curHSystem.name
+    curConn match  {
+		case Some(c) => if(c.d==0) addConnectR(pcmd,pars) else  addConnectC(pcmd,pars) 
+		case None => throw new Exception("no curConn")
+	}
+  }
+        
+    class AddConntectPartCommand(val execfn : (SchemeEntityParams) => Future[SchemeEntity], 
+                                            val params : SchemeEntityParams) extends Command{
+        val oldConn = curConn
+        val mhSystem = curHSystem
+        var mId : Int = -1
+                
+        def execute (){
+             execfn(params) foreach {
+                ent => {
+                    mId = ent.eid
+                    addPart(ent)
+                    curConn foreach {c => IndexedDb.updateCurConn($(eid = c.ent.eid, conN = c.nmb))}
+                    app.showScheme()                    
+                }
+             }
+        }
+        
+		def unexecute()  {
+            val pidf = IndexedDb.delPart(mId)
+                pidf foreach {
+                   pid => {  curConn = oldConn
+                            delPart(mId)
+                            oldConn foreach { case con => IndexedDb.updateCurConn($(eid = con.ent.eid, conN = con.nmb))}
+                            app.showScheme()
+                    }
+                }
+		}
+    }
+}
