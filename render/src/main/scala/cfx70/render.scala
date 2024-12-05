@@ -27,7 +27,8 @@ object VDetails{
 
 @JSExportTopLevel(name = "Det3dView", moduleID = "vdetails")	
 object Det3dView {
-	def apply(canvasID : String) : Det3dView = new Det3dView(canvasID)
+	@JSExport
+	def create3dView(canvasID : String) : Det3dView = new Det3dView(canvasID)
 }
 
 class Det3dView (val canvasID : String /*light, alight, background*/) { 
