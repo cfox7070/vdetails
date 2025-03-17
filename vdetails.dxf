@@ -25,13 +25,13 @@ $EXTMIN
  10
 -17.15278776126478
  20
-63.84966777408587
+-230.6666666666667
  30
 0
   9
 $EXTMAX
  10
-503.5401329702733
+503.5401329702734
  20
 317.2629122126143
  30
@@ -1121,9 +1121,9 @@ AcDbViewportTableRecord
  21
 1
  12
-269.4094293034189
+441.4382819874605
  22
-160.5932769988349
+163.3776734365962
  13
 0
  23
@@ -1149,7 +1149,7 @@ AcDbViewportTableRecord
  37
 0
  40
-261.8322891042602
+566.1332193736092
  41
 2.257234726688103
  42
@@ -2315,6 +2315,34 @@ STANDARD
   4
 
   0
+STYLE
+  5
+4C
+330
+2
+100
+AcDbSymbolTableRecord
+100
+AcDbTextStyleTableRecord
+  2
+unicode
+ 70
+    0
+ 40
+0
+ 41
+1
+ 50
+0
+ 71
+    0
+ 42
+1
+  3
+unicode
+  4
+
+  0
 ENDTAB
   0
 TABLE
@@ -2373,7 +2401,7 @@ ACAD
   0
 APPID
   5
-4C
+4D
 330
 9
 100
@@ -2405,7 +2433,7 @@ AcDbDimStyleTable
   0
 DIMSTYLE
 105
-4D
+4E
 330
 A
 100
@@ -2679,7 +2707,7 @@ ENTITIES
   0
 MTEXT
   5
-4E
+4F
 100
 AcDbEntity
   8
@@ -2725,7 +2753,7 @@ STANDARD
   0
 MTEXT
   5
-4F
+50
 100
 AcDbEntity
   8
@@ -2755,53 +2783,7 @@ AcDbMText
   1
 table
   7
-
-210
-0
-220
-0
-230
-1
- 50
-0
- 73
-    2
- 44
-1
-  0
-MTEXT
-  5
-50
-100
-AcDbEntity
-  8
-main
-  6
-ByLayer
- 62
-  256
-370
-   -1
-100
-AcDbMText
- 10
-292.2019195275006
- 20
-267.4750830564786
- 30
-0
- 40
-10
- 41
-25.55556069842847
- 71
-    1
- 72
-    1
-  1
-json
-  7
-
+STANDARD
 210
 0
 220
@@ -2831,23 +2813,23 @@ ByLayer
 100
 AcDbMText
  10
-97.6018826135106
+292.2019195275006
  20
-75.84966777408643
+267.4750830564786
  30
 0
  40
-12
+10
  41
-24.00000000000055
+25.55556069842847
  71
     1
  72
     1
   1
-dev
+json
   7
-
+STANDARD
 210
 0
 220
@@ -2877,23 +2859,23 @@ ByLayer
 100
 AcDbMText
  10
-244.5080287929127
+97.6018826135106
  20
-76.88787375415288
+75.84966777408643
  30
 0
  40
 12
  41
-26.66666666666723
+24.00000000000055
  71
     1
  72
     1
   1
-info
+dev
   7
-
+STANDARD
 210
 0
 220
@@ -2923,23 +2905,23 @@ ByLayer
 100
 AcDbMText
  10
-287.5299926172016
+244.5080287929127
  20
-236.3289036544852
+76.88787375415288
  30
 0
  40
-10
+12
  41
-92.22222736509654
+26.66666666666723
  71
     1
  72
     1
   1
-param_string
+info
   7
-
+STANDARD
 210
 0
 220
@@ -2969,23 +2951,23 @@ ByLayer
 100
 AcDbMText
  10
-285.8424239352196
+287.5299926172016
  20
-209.8903276367674
+236.3289036544852
  30
 0
  40
 10
  41
-33.33333847620577
+92.22222736509654
  71
     1
  72
     1
   1
-descr
+param_string
   7
-
+STANDARD
 210
 0
 220
@@ -3015,23 +2997,23 @@ ByLayer
 100
 AcDbMText
  10
-283.1441011552564
+285.8424239352196
  20
-176.5067766222231
+209.8903276367674
  30
 0
  40
 10
  41
-26.66666666666713
+33.33333847620577
  71
     1
  72
     1
   1
-note
+descr
   7
-
+STANDARD
 210
 0
 220
@@ -3061,6 +3043,52 @@ ByLayer
 100
 AcDbMText
  10
+283.1441011552564
+ 20
+176.5067766222231
+ 30
+0
+ 40
+10
+ 41
+26.66666666666713
+ 71
+    1
+ 72
+    1
+  1
+note
+  7
+STANDARD
+210
+0
+220
+0
+230
+1
+ 50
+0
+ 73
+    2
+ 44
+1
+  0
+MTEXT
+  5
+57
+100
+AcDbEntity
+  8
+main
+  6
+ByLayer
+ 62
+  256
+370
+   -1
+100
+AcDbMText
+ 10
 456.98928737852
  20
 316.7435354431795
@@ -3077,7 +3105,7 @@ AcDbMText
   1
 DB
   7
-
+STANDARD
 210
 0
 220
@@ -3093,7 +3121,7 @@ DB
   0
 LWPOLYLINE
   5
-57
+58
 100
 AcDbEntity
   8
@@ -3131,7 +3159,7 @@ AcDbPolyline
   0
 LINE
   5
-58
+59
 100
 AcDbEntity
   8
@@ -3155,7 +3183,7 @@ AcDbLine
   0
 LINE
   5
-59
+5A
 100
 AcDbEntity
   8
@@ -3179,7 +3207,7 @@ AcDbLine
   0
 MTEXT
   5
-5A
+5B
 100
 AcDbEntity
   8
@@ -3209,7 +3237,7 @@ AcDbMText
   1
 3dview
   7
-
+STANDARD
 210
 0
 220
@@ -3225,7 +3253,7 @@ AcDbMText
   0
 MTEXT
   5
-5B
+5C
 100
 AcDbEntity
   8
@@ -3255,7 +3283,7 @@ AcDbMText
   1
 3dModel
   7
-
+STANDARD
 210
 0
 220
@@ -3271,7 +3299,7 @@ AcDbMText
   0
 MTEXT
   5
-5C
+5D
 100
 AcDbEntity
   8
@@ -3317,7 +3345,7 @@ STANDARD
   0
 LINE
   5
-5D
+5E
 100
 AcDbEntity
   8
@@ -3341,7 +3369,7 @@ AcDbLine
   0
 LINE
   5
-5E
+5F
 100
 AcDbEntity
   8
@@ -3365,7 +3393,7 @@ AcDbLine
   0
 LINE
   5
-5F
+60
 100
 AcDbEntity
   8
@@ -3389,7 +3417,7 @@ AcDbLine
   0
 LINE
   5
-60
+61
 100
 AcDbEntity
   8
@@ -3413,7 +3441,7 @@ AcDbLine
   0
 LINE
   5
-61
+62
 100
 AcDbEntity
   8
@@ -3437,7 +3465,7 @@ AcDbLine
   0
 LINE
   5
-62
+63
 100
 AcDbEntity
   8
@@ -3461,7 +3489,7 @@ AcDbLine
   0
 LINE
   5
-63
+64
 100
 AcDbEntity
   8
@@ -3485,7 +3513,7 @@ AcDbLine
   0
 MTEXT
   5
-64
+65
 100
 AcDbEntity
   8
@@ -3515,7 +3543,91 @@ AcDbMText
   1
 flange
   7
-
+STANDARD
+210
+0
+220
+0
+230
+1
+ 50
+0
+ 73
+    2
+ 44
+1
+  0
+LWPOLYLINE
+  5
+66
+100
+AcDbEntity
+  8
+main
+  6
+ByLayer
+ 62
+  256
+370
+   -1
+100
+AcDbPolyline
+ 90
+    4
+ 70
+    1
+ 43
+0
+ 10
+-10
+ 20
+30
+ 10
+70
+ 20
+30
+ 10
+70
+ 20
+-230
+ 10
+-10
+ 20
+-230
+  0
+MTEXT
+  5
+67
+100
+AcDbEntity
+  8
+main
+  6
+ByLayer
+ 62
+  256
+370
+   -1
+100
+AcDbMText
+ 10
+0
+ 20
+20
+ 30
+0
+ 40
+8
+ 41
+52.44711291003031
+ 71
+    1
+ 72
+    1
+  1
+redrr\Pimg\Pnote\Pa1\Pb1\Pa2\Pb2\Pda\Pdb\Ph\Pf1\Pf2\Ptype_vsn\Pfl1\Pfl2\Pmat\Pins_type\Pins_th\Pcov_type\P\P
+  7
+unicode
 210
 0
 220
@@ -3561,7 +3673,7 @@ AcDbDictionary
   0
 PLOTSETTINGS
   5
-65
+68
 100
 AcDbPlotSettings
   6

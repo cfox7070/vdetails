@@ -1,6 +1,6 @@
 enablePlugins(ScalaJSPlugin)
 
-ThisBuild / scalaVersion := "2.13.13"
+ThisBuild / scalaVersion := "2.13.16"
 ThisBuild / organization := "com.cfx70"
 ThisBuild / version      := "0.1.0"
  
@@ -13,7 +13,7 @@ lazy val commonSettings = Seq(
     libraryDependencies +="org.scalactic" %%% "scalactic" % "3.2.14",
 //    libraryDependencies += "org.scalatest" %% "scalatest" % "3.2.7" % "test",
 	libraryDependencies += "com.lihaoyi" %%% "utest" % "0.8.1" % "test",
-    libraryDependencies += "org.scala-js" %%% "scalajs-dom" % "2.7.0",
+    libraryDependencies += "org.scala-js" %%% "scalajs-dom" % "2.8.0",
     testFrameworks += new TestFramework("utest.runner.Framework"),
     scalacOptions ++= Seq(
           "-deprecation",                      // Emit warning and location for usages of deprecated APIs.
