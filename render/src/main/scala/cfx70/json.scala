@@ -1,30 +1,42 @@
 package cfx70.cfpl.render
 
-import scala.scalajs.js.annotation._
 import scala.scalajs.js
-import org.scalajs.dom
-import org.scalajs.dom.{html,document,Event}
+import scala.scalajs.js.JSON
 import scala.scalajs.js.timers._
 
-import scala.math._
+object DetParams {
+	
+	def fromJson (json :String) : DetParams = JSON.parse(json).asInstanceOf[DetParams]
+		
+}
 
-import cfx70.cfpl.core._
-import cfx70.cfpl.core.CommonHelpers._
-import cfx70.cfpl.core.Helpers3d._
-import cfx70.cfpl.core.Helpers2d._
-
-import cfx70.threejsfacade.THREE._
-import cfx70.threejsfacade.OrbitControls
-
-import cfx70.vecquat._
-
-class DetParams extends js.Object {
+abstract class DetParams extends js.Object {
 	var dtype : String = _
-}
-class RedRRParams extends DetParams {
-	var a1 : Double = _
+	def toJSON : String
 }
 
+object DuctRParams{	
+	val paramsDraft = ""
+	val defaultJson = s"""{"dtype":"ductR", "a":400, "b":300}"""
+}
+
+class DuctRParams extends DetParams {
+	var a : Double = _
+	var b : Double = _		
+	var l : Double = _		
+	
+	def toJSON : String = JSON.stringify(this)	
+}
+
+object mApp {
+  def main(args: Array[String]): Unit = {
+    println("Hello world!")
+    val mob = DetParams.fromJson(DuctRParams.defaultJson)
+    println(mob.dtype)
+    val s= mob.toJSON
+    println(s)
+  }
+}
 
 
 

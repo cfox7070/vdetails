@@ -1,0 +1,203 @@
+package cfx70.redrr
+
+import scala.scalajs.js
+import org.scalajs.dom.{ErrorEvent, Event, idb}
+import org.scalajs.dom.raw.IDBVersionChangeEvent
+
+import scala.concurrent.{Future, Promise}
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.util.{Failure, Success}
+
+
+object IndexedDb {
+
+  def open(databaseName: String, version: Option[Int] = Some(1))(upgradeHandler: (idb.Database, idb.Transaction) => Unit): Future[idb.Database] = {
+    val promise = Promise[idb.Database]()
+    val request = version match {
+      case Some(v) => factory.open(databaseName, v)
+      case None => factory.open(databaseName)
+    }
+    request.onupgradeneeded = {(event: IDBVersionChangeEvent) =>
+      val db = event.target.asInstanceOf[js.Dynamic].result.asInstanceOf[idb.Database]
+      val transaction = event.currentTarget.asInstanceOf[js.Dynamic].transaction.asInstanceOf[idb.Transaction]
+      upgradeHandler(db, transaction)
+    }
+    request.onblocked = {(event: Event) =>
+
+    }
+    request.onsuccess = {(event: Event) =>
+      val db = event.target.asInstanceOf[js.Dynamic].result.asInstanceOf[idb.Database]
+      promise.success(db)
+    }
+    request.onerror = {(event: ErrorEvent) =>
+      promise.failure(new Exception(event.message))
+    }
+    promise.future
+  }
+
+  def delete(databaseName: String) = {
+    factory.deleteDatabase(databaseName)
+  }
+
+  private def factory = js.Dynamic.global.indexedDB.asInstanceOf[idb.Factory]
+  
+  private def targetType[T] (event : Event) = event.target.asInstanceOf[js.Dynamic].result.asInstanceOf[T]
+  
+  
+  def upgradeHandler(db : idb.Database, t : idb.Transaction) : Unit = {
+  
+	    println(s"upgrading database")
+	    
+        if (!db.objectStoreNames.contains("hsystems")){  // если хранилище "books" не существует
+            val hsSt=db.createObjectStore("hsystems", $(keyPath = "name", autoIncrement = false)) // создаем хранилище
+            hsSt.add($(name = "_"))
+            hsSt.add($(name = "П1"))
+        }
+        
+       if (!db.objectStoreNames.contains("hparts")){ 
+            val pSt=db.createObjectStore("hparts", $(keyPath = "id", autoIncrement = true)) 
+            val pr = new PartRecord("StrPartR",1,new SchemeEntityParams(){	hsystem = "П1"
+													connected = js.Array[HConnection]()
+													placement = js.undefined                          
+													ins = 0.0
+													dims = js.Array[Double](300,200,1250)
+													triggs = js.Array[Int]()
+									})
+            pSt.add(pr)
+        }
+            
+         if (!db.objectStoreNames.contains("hdoc")){ 
+            val docStore = db.createObjectStore("hdoc")
+                docStore.add("unnamed","name")
+                docStore.add("П1","curhsystem")
+                docStore.add($(eid = 1, conN = 0),"curconn")
+          }
+         println("upgrade success")
+       }
+        
+  val fdb : Future[idb.Database] =open("hproject",Some(1))(upgradeHandler)
+  fdb.onComplete {
+        case Success(value) => println(s"database has been open")
+        case Failure(e) => {println(s"couldn't open database");println();e.printStackTrace}
+    }
+  
+  def getHSystems()  : Future[List[HSystem]] = {
+    val p = Promise[List[HSystem]]()
+    var sl = List[HSystem]()
+    fdb.andThen {
+        case Success(db) => {
+            val sst = db.transaction("hsystems", "readonly").objectStore("hsystems")
+            val request = sst.openCursor() 
+            request.onsuccess = (event: Event) => {
+                val cursor = targetType[idb.CursorWithValue](event)
+                if(cursor!= null){
+                    val sr = cursor.value.asInstanceOf[HSysRecord]
+                    sl = new HSystem (sr.name) :: sl
+                    cursor.continue()
+                } else {
+                    p.success(sl)
+                }
+            }
+
+            request.onerror = (event: ErrorEvent) => p.failure(new Exception(event.message))
+        }
+        case Failure(e) => p.failure(e)
+    }    
+    p.future      
+  }
+  
+ def getCurConn() : Future[ConnRecord] = getHDocVal[ConnRecord]("curconn") 
+ def getCurSystemName() : Future[String] = getHDocVal[String]("curhsystem") 
+ def getName() : Future[String] = getHDocVal[String]("name")
+  
+ private def getHDocVal[T] (key : String) : Future[T] = {
+ 	def dbact(db : idb.Database, key : String) = 
+					    db.transaction("hdoc").objectStore("hdoc").get(key)
+	def succfunc(promise : Promise[T],ev : Event, key : String) = 
+											promise.success( targetType[T](ev))
+	fromdb(dbact, succfunc, key)
+  }
+  
+  def updateCurConn(nv : js.Object)  = updateHDocVal[js.Object](nv,"curconn") 
+
+  def updateHDocVal[T <: js.Object] (newVal : T,key : String) { //bool
+        fdb.andThen {
+            case Success(db) => {
+                val request = db.transaction("hdoc", "readwrite").objectStore("hdoc").put(newVal,key)
+                request.onsuccess = (event: Event) =>{ }
+                request.onerror = (event: ErrorEvent) => {}
+            }
+            case Failure(e) => 
+        }
+  }
+  
+  def addPart(partData : js.Object) : Future[Int] = {
+	def dbact(db : idb.Database, partData : js.Object) = 
+				db.transaction("hparts", "readwrite").objectStore("hparts").add(partData)		
+	def succfunc(promise : Promise[Int],ev : Event, partData : js.Object) = 
+									promise.success( targetType[Int](ev))
+	fromdb(dbact, succfunc, partData)
+    }
+    
+  def delPart(id : Int) : Future [Int] = {
+	def dbact(db : idb.Database, v : Int) = 
+				db.transaction("hparts", "readwrite").objectStore("hparts").delete(id) // (3)		
+	def succfunc(promise : Promise[Int],ev : Event, v: Int) = promise.success(v)
+	fromdb(dbact, succfunc, id)
+  }
+  
+  def getParts() : Future[List[PartRecord]] = { //getAll
+	var rl = List[PartRecord]()
+	def dbact(db : idb.Database, v : Int) = 
+				db.transaction("hparts", "readonly").objectStore("hparts").openCursor()		
+	def succfunc(promise : Promise[List[PartRecord]],ev : Event, v: Int) = {
+                        val cursor = targetType[idb.CursorWithValue](ev)
+                        if(cursor!= null){
+                            rl = cursor.value.asInstanceOf[PartRecord] :: rl
+                            cursor.continue()
+                        } else {
+                            promise.success(rl)
+                        }
+                    }
+	fromdb(dbact, succfunc, 0)
+  }
+  
+  private def  fromdb[A,T](dbact : (idb.Database,A) => idb.Request,
+					  succfunc : (Promise[T],Event,A) => Unit, v : A): Future[T] = {	
+       val promise = Promise[T]()
+        fdb.andThen {
+            case Success(db) => {
+                    val request = dbact(db,v)
+                    request.onsuccess = (event: Event) =>succfunc(promise,event,v)
+                    request.onerror = (event: ErrorEvent) => promise.failure(new Exception(event.message))
+            }
+            case _ =>promise.failure(new Exception("database error"))
+        }
+        promise.future
+  }
+  
+  trait HSysRecord extends js.Object {val name : String}
+} 
+trait ConnRecord extends js.Object {def eid : Int; def conN :Int} 
+
+class PartRecord( val htype: String, val id : Int, val params : SchemeEntityParams)  extends js.Object {}
+object PartRecord {
+    def jsonString(pr : PartRecord) : String = {
+        val pars = s""" {
+        hsystem : ${pr.params.hsystem},
+        connected : ${pr.params.connected.mkString},
+        placement : ${pr.params.placement},                          
+        ins : ${pr.params.ins},
+        dims : [${pr.params.dims.mkString(",")}],
+        triggs :[ ${pr.params.triggs.mkString(",")}]
+    }"""
+
+s"""{ 
+    htype : ${pr.htype}, 
+    id : ${pr.id}, 
+    params : $pars 
+}"""
+    }
+}
+//class StrPartRParams(val hsystemId : Int, val a:Double,val b:Double,val l:Double,val  ins:Double =0) extends js.Object {}
+

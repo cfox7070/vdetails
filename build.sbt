@@ -9,6 +9,7 @@ import sbt.Keys.streams
 val toHtml = taskKey[Unit]("copy to html//")
 
 lazy val commonSettings = Seq(
+//	scalaJSUseMainModuleInitializer := true,
     scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.ESModule) },
     libraryDependencies +="org.scalactic" %%% "scalactic" % "3.2.14",
 //    libraryDependencies += "org.scalatest" %% "scalatest" % "3.2.7" % "test",
@@ -33,6 +34,13 @@ lazy val threejsfacade = (project in file("threejsfacade"))
     name := "threejsfacade",
     commonSettings
    )
+   
+lazy val idbwrap = (project in file("idb"))
+  .enablePlugins(ScalaJSPlugin)
+  .settings(
+    name := "idbwrap",
+    commonSettings
+   )
 
 lazy val core = (project in file("core"))
   .dependsOn(threejsfacade)
@@ -43,7 +51,7 @@ lazy val core = (project in file("core"))
    )
 
 lazy val render = (project in file("render"))
-  .dependsOn(core)
+  .dependsOn(core,idbwrap)
   .enablePlugins(ScalaJSPlugin)
   .settings(
     name := "render",
